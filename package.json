@@ -1,0 +1,30 @@
+{
+  "name": "@nullvariable/openclaw-kagi-search",
+  "version": "0.1.0",
+  "description": "Kagi Search API plugin for OpenClaw with balance monitoring",
+  "author": "Doug Cone <nullvariable>",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.ts",
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "kagi",
+    "search",
+    "web-search"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nullvariable/openclaw-kagi-search.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nullvariable/openclaw-kagi-search/issues"
+  },
+  "homepage": "https://github.com/nullvariable/openclaw-kagi-search#readme",
+  "peerDependencies": {
+    "openclaw": ">=2026.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

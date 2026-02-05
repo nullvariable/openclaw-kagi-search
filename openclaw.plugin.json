@@ -1,0 +1,59 @@
+{
+  "$schema": "https://openclaw.ai/schemas/plugin.json",
+  "id": "kagi-search",
+  "name": "Kagi Search",
+  "version": "0.1.0",
+  "description": "Web search via Kagi Search API with balance monitoring",
+  "author": "nullvariable",
+  "license": "MIT",
+  "entry": "index.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "description": "Kagi API token (or set KAGI_API_KEY env var)",
+        "secret": true
+      },
+      "maxResults": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "default": 10,
+        "description": "Maximum number of search results to return"
+      },
+      "timeoutMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 120000,
+        "default": 30000,
+        "description": "Request timeout in milliseconds"
+      },
+      "balance": {
+        "type": "object",
+        "description": "API balance monitoring thresholds",
+        "properties": {
+          "warnThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "default": 1.0,
+            "description": "Log warning when balance falls below this amount (USD)"
+          },
+          "blockThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0.25,
+            "description": "Block searches when balance falls below this amount (USD)"
+          }
+        },
+        "additionalProperties": false
+      },
+      "includeRelatedSearches": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include related search suggestions in results"
+      }
+    },
+    "additionalProperties": false
+  }
+}
