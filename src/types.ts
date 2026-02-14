@@ -71,3 +71,43 @@ export interface KagiToolResult {
     resultCount: number;
   };
 }
+
+/**
+ * Kagi News Enrichment API types
+ * @see https://help.kagi.com/kagi/api/enrich.html
+ */
+
+export interface KagiNewsParams {
+  q: string;
+}
+
+/** News enrichment result item */
+export interface KagiNewsResult {
+  t: 0;
+  rank?: number;
+  url: string;
+  title: string;
+  snippet?: string;
+  published?: string;
+}
+
+export interface KagiNewsResponse {
+  meta: KagiMeta;
+  data: KagiNewsResult[];
+  error?: Array<{ code: number; msg: string; ref?: string }>;
+}
+
+/** News tool output format */
+export interface KagiNewsToolResult {
+  results: Array<{
+    title: string;
+    url: string;
+    snippet?: string;
+    published?: string;
+  }>;
+  meta: {
+    balance: number;
+    queryTimeMs: number;
+    resultCount: number;
+  };
+}

@@ -5,7 +5,7 @@
  * @see https://help.kagi.com/kagi/api/search.html
  */
 
-import { kagiSearch, formatToolResult, KagiApiError } from "./src/api.js";
+import { kagiSearch, kagiNews, formatToolResult, formatNewsToolResult, KagiApiError } from "./src/api.js";
 import type { KagiPluginConfig } from "./src/types.js";
 
 /** Runtime state for balance tracking */
@@ -31,6 +31,21 @@ const KagiSearchToolSchema = {
       minimum: 1,
       maximum: 50,
       description: "Maximum results to return (default: from plugin config or 10)",
+    },
+  },
+  required: ["query"],
+};
+
+/** News tool parameter schema */
+const KagiNewsToolSchema = {
+  type: "object",
+  properties: {
+    query: { type: "string", description: "Search query for news/discussions" },
+    limit: {
+      type: "integer",
+      minimum: 1,
+      maximum: 50,
+      description: "Maximum results to return (default: 10)",
     },
   },
   required: ["query"],
@@ -206,6 +221,93 @@ const kagiSearchPlugin = {
           }
           const message = err instanceof Error ? err.message : String(err);
           api.logger.error(`[kagi-search] Search failed: ${message}`);
+          return json({ error: message });
+        }
+      },
+    });
+
+    // Register kagi_news tool
+    api.registerTool({
+      name: "kagi_news",
+      label: "Kagi News",
+      description:
+        "Search Kagi's News Enrichment API for interesting discussions and non-mainstream news. Use when researching recent news, finding discussions about a topic, or gathering alternative perspectives on AI, tech, or business topics. Returns titles, URLs, snippets, and publication dates.",
+      parameters: KagiNewsToolSchema,
+
+      async execute(_toolCallId, params) {
+        const json = (payload: unknown) => ({
+          content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+          details: payload,
+        });
+
+        const p = params as { query?: string; limit?: number };
+
+        // Validate query
+        const query = typeof p.query === "string" ? p.query.trim() : "";
+        if (!query) {
+          return json({ error: "Query is required" });
+        }
+
+        // Check API key
+        if (!config.apiKey) {
+          return json({
+            error: "Kagi API key not configured. Set apiKey in plugin config or KAGI_API_KEY env var.",
+          });
+        }
+
+        // Check balance threshold (if we have a known balance)
+        const blockThreshold = config.balance?.blockThreshold ?? 0.25;
+        if (state.lastKnownBalance !== null && state.lastKnownBalance < blockThreshold) {
+          return json({
+            error: `Kagi API balance too low ($${state.lastKnownBalance.toFixed(2)}). Searches blocked until balance exceeds $${blockThreshold.toFixed(2)}.`,
+            balance: state.lastKnownBalance,
+          });
+        }
+
+        try {
+          const limit = typeof p.limit === "number" ? p.limit : 10;
+
+          const response = await kagiNews(
+            { q: query },
+            { apiKey: config.apiKey, timeoutMs: config.timeoutMs }
+          );
+
+          // Update balance state
+          const balance = response.meta.api_balance;
+          state.lastKnownBalance = balance;
+          state.lastBalanceCheck = Date.now();
+
+          // Check warning threshold
+          const warnThreshold = config.balance?.warnThreshold ?? 1.0;
+          if (balance < warnThreshold && !state.warningIssued) {
+            api.logger.warn(
+              `[kagi-search] API balance low: $${balance.toFixed(2)} (warn threshold: $${warnThreshold.toFixed(2)})`
+            );
+            state.warningIssued = true;
+          } else if (balance >= warnThreshold) {
+            state.warningIssued = false;
+          }
+
+          // Check if balance dropped below block threshold for next request
+          if (balance < blockThreshold) {
+            api.logger.warn(
+              `[kagi-search] API balance critically low: $${balance.toFixed(2)}. Future searches will be blocked until balance exceeds $${blockThreshold.toFixed(2)}.`
+            );
+          }
+
+          const result = formatNewsToolResult(response, limit);
+          return json(result);
+        } catch (err) {
+          if (err instanceof KagiApiError) {
+            api.logger.error(`[kagi-search] News API error: ${err.message} (code: ${err.code})`);
+            return json({
+              error: err.message,
+              code: err.code,
+              ref: err.ref,
+            });
+          }
+          const message = err instanceof Error ? err.message : String(err);
+          api.logger.error(`[kagi-search] News search failed: ${message}`);
           return json({ error: message });
         }
       },
