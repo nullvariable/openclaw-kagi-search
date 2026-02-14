@@ -32,6 +32,11 @@ const KagiSearchToolSchema = {
       maximum: 50,
       description: "Maximum results to return (default: from plugin config or 10)",
     },
+    freshness: {
+      type: "string",
+      description:
+        "Filter results by freshness. Values: 'pd' (past day/24h), 'pw' (past week), 'pm' (past month), 'py' (past year), or date range 'YYYY-MM-DDtoYYYY-MM-DD'.",
+    },
   },
   required: ["query"],
 };
@@ -144,7 +149,7 @@ const kagiSearchPlugin = {
       name: "kagi_search",
       label: "Kagi Search",
       description:
-        "Search the web using Kagi Search API. Returns structured results with titles, URLs, and snippets. Kagi results reflect account-level personalization (blocked/promoted sites).",
+        "Search the web using Kagi Search API. Returns structured results with titles, URLs, and snippets. Kagi results reflect account-level personalization (blocked/promoted sites). Supports freshness filtering: 'pd' (past day), 'pw' (past week), 'pm' (past month), 'py' (past year).",
       parameters: KagiSearchToolSchema,
 
       async execute(_toolCallId, params) {
@@ -153,7 +158,7 @@ const kagiSearchPlugin = {
           details: payload,
         });
 
-        const p = params as { query?: string; limit?: number };
+        const p = params as { query?: string; limit?: number; freshness?: string };
 
         // Validate query
         const query = typeof p.query === "string" ? p.query.trim() : "";
@@ -179,9 +184,10 @@ const kagiSearchPlugin = {
 
         try {
           const limit = typeof p.limit === "number" ? p.limit : config.maxResults ?? 10;
+          const freshness = typeof p.freshness === "string" ? p.freshness : undefined;
 
           const response = await kagiSearch(
-            { q: query, limit },
+            { q: query, limit, freshness },
             { apiKey: config.apiKey, timeoutMs: config.timeoutMs }
           );
 

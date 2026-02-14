@@ -6,6 +6,15 @@
 export interface KagiSearchParams {
   q: string;
   limit?: number;
+  /**
+   * Filter results by freshness/recency.
+   * - 'pd' = past day (24 hours)
+   * - 'pw' = past week
+   * - 'pm' = past month
+   * - 'py' = past year
+   * - 'YYYY-MM-DDtoYYYY-MM-DD' = custom date range
+   */
+  freshness?: string;
 }
 
 export interface KagiMeta {

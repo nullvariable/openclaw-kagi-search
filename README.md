@@ -80,10 +80,18 @@ The plugin registers two tools:
 
 Full web search using Kagi's search index. Results reflect your account personalization (blocked/promoted sites).
 
-| Parameter | Type    | Required | Description                              |
-|-----------|---------|----------|------------------------------------------|
-| `query`   | string  | Yes      | Search query                             |
-| `limit`   | integer | No       | Max results (1-50, default from config)  |
+| Parameter   | Type    | Required | Description                                                                                      |
+|-------------|---------|----------|--------------------------------------------------------------------------------------------------|
+| `query`     | string  | Yes      | Search query                                                                                     |
+| `limit`     | integer | No       | Max results (1-50, default from config)                                                          |
+| `freshness` | string  | No       | Filter by recency: `pd` (past day), `pw` (past week), `pm` (past month), `py` (past year), or date range `YYYY-MM-DDtoYYYY-MM-DD` |
+
+**Freshness Examples:**
+- `"pd"` — Results from the past 24 hours
+- `"pw"` — Results from the past week
+- `"pm"` — Results from the past month
+- `"py"` — Results from the past year
+- `"2024-01-01to2024-06-30"` — Results within a custom date range
 
 **Response:**
 
@@ -114,6 +122,8 @@ Search Kagi's news enrichment index for interesting discussions and non-mainstre
 |-----------|---------|----------|------------------------------------------|
 | `query`   | string  | Yes      | Search query                             |
 | `limit`   | integer | No       | Max results (1-50, default: 10)          |
+
+> **Note:** The News Enrichment API does not support freshness filtering. Results are sorted by relevance from Kagi's TinyGem index. Use `kagi_search` with `freshness` if you need time-filtered results.
 
 **Response:**
 

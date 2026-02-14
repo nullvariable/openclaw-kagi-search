@@ -42,6 +42,9 @@ export async function kagiSearch(
   if (params.limit) {
     url.searchParams.set("limit", String(params.limit));
   }
+  if (params.freshness) {
+    url.searchParams.set("freshness", params.freshness);
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
